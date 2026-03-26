@@ -68,6 +68,7 @@ function AppProvider({ children }) {
   // UI state moved to provider for global layout
   const [query, setQuery] = useState('');
   const [activeSidebar, setActiveSidebar] = useState('all');
+  const [navigationList, setNavigationList] = useState([]);
   const mainRef = React.useRef(null);
 
   const productsById = useMemo(() => {
@@ -171,7 +172,9 @@ function AppProvider({ children }) {
     priceOfProduct, getNameOfProduct, getNameOfCategory,
     cart, totals, currency,
     query, setQuery, activeSidebar, setActiveSidebar, mainRef,
+    navigationList, setNavigationList,
     homeScrollPos: React.useRef(0),
+    setEditorScrollPos: React.useRef(0),
   };
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
@@ -311,7 +314,7 @@ function CategoryBar({ categories, current, onSelect }) {
 }
 
 function Home() {
-  const { catalog, lang, t, getNameOfCategory, query, activeSidebar, homeScrollPos } = useApp();
+  const { catalog, lang, t, getNameOfCategory, query, activeSidebar, homeScrollPos, setNavigationList } = useApp();
   const scrollRef = React.useRef(null);
   const lastSidebar = React.useRef(activeSidebar);
 
@@ -347,6 +350,10 @@ function Home() {
     }
     return list;
   }, [catalog.products, activeSidebar, query, lang]);
+
+  useEffect(() => {
+    setNavigationList(filteredProducts.map(p => p.id));
+  }, [filteredProducts, setNavigationList]);
 
   const promoSets = useMemo(() => (catalog.sets || []).slice(0, 3), [catalog.sets]);
 
@@ -457,7 +464,7 @@ function useProductParamsSafe() {
 }
 
 function SetEditor() {
-  const { t, catalog, priceOfProduct, getNameOfProduct, productsById, lang, addSetToCart, cart } = useApp();
+  const { t, catalog, priceOfProduct, getNameOfProduct, productsById, lang, addSetToCart, cart, setEditorScrollPos, setNavigationList } = useApp();
   const navigate = useNavigate();
   const { setId, editId } = useSetParamsSafe();
   const setDef = catalog.sets.find(s => s.id === setId);
@@ -466,6 +473,7 @@ function SetEditor() {
   const [persons, setPersons] = useState(10);
   const [variant, setVariant] = useState('adult');
   const [perPerson, setPerPerson] = useState([]);
+  const scrollRef = React.useRef(null);
 
   useEffect(() => {
     if (!setDef) return;
@@ -479,6 +487,20 @@ function SetEditor() {
       setPerPerson(setDef.base.map(b => ({ productId: b.productId, qtyPerPerson: b.qty / setDef.default_persons })));
     }
   }, [setDef?.id, editId]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: setEditorScrollPos.current, behavior: 'auto' });
+    }
+  }, [setEditorScrollPos]);
+
+  useEffect(() => {
+    setNavigationList(perPerson.map(p => p.productId));
+  }, [perPerson, setNavigationList]);
+
+  const handleScroll = (e) => {
+    setEditorScrollPos.current = e.target.scrollTop;
+  };
 
   const bump = (pid, d) => setPerPerson(list => list.map(x => x.productId === pid ? { ...x, qtyPerPerson: Math.max(0, Number((x.qtyPerPerson + d).toFixed(2))) } : x));
   const pricePerPerson = useMemo(() => {
@@ -498,7 +520,11 @@ function SetEditor() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto hide-scrollbar">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto hide-scrollbar"
+      >
         <header className="relative w-full h-[180px] overflow-hidden">
           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${getSetImg(setDef, 800, 400)}')` }}></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-transparent"></div>
@@ -914,30 +940,56 @@ function ReviewOrder() {
 }
 
 function ProductPage() {
-  const { catalog, productsById, lang, addProduct, cart, changeQty, removeItem, t } = useApp();
+  const { catalog, productsById, lang, addProduct, cart, changeQty, removeItem, t, navigationList } = useApp();
   const navigate = useNavigate();
   const { productId } = useProductParamsSafe();
   const product = productsById.get(productId);
+  const scrollRef = React.useRef(null);
 
   const inCart = useMemo(() => product ? cart.find(it => it.type === 'product' && it.productId === product.id) : null, [cart, product]);
   const recommendations = useMemo(() => product ? (catalog.products || []).filter(p => p.id !== product.id && (p.category === product.category || p.popular)).slice(0, 3) : [], [catalog.products, product]);
 
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
+  const touchRef = React.useRef({ startX: 0, startY: 0, endX: 0, endY: 0 });
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
+    touchRef.current.startX = e.targetTouches[0].clientX;
+    touchRef.current.startY = e.targetTouches[0].clientY;
+    touchRef.current.endX = e.targetTouches[0].clientX;
+    touchRef.current.endY = e.targetTouches[0].clientY;
   };
 
-  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchMove = (e) => {
+    touchRef.current.endX = e.targetTouches[0].clientX;
+    touchRef.current.endY = e.targetTouches[0].clientY;
+  };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchEnd - touchStart;
-    const isRightSwipe = distance > minSwipeDistance;
-    if (isRightSwipe) navigate(-1);
+    const { startX, startY, endX, endY } = touchRef.current;
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      // Horizontal swipe
+      if (Math.abs(diffX) > minSwipeDistance) {
+        const currentIndex = navigationList.indexOf(productId);
+        if (currentIndex !== -1) {
+          if (diffX > 0 && currentIndex > 0) {
+            // Swipe right -> Previous
+            navigate(`/product/${navigationList[currentIndex - 1]}`, { replace: true });
+          } else if (diffX < 0 && currentIndex < navigationList.length - 1) {
+            // Swipe left -> Next
+            navigate(`/product/${navigationList[currentIndex + 1]}`, { replace: true });
+          }
+        }
+      }
+    } else {
+      // Vertical swipe
+      if (diffY > minSwipeDistance && scrollRef.current && scrollRef.current.scrollTop <= 0) {
+        // Swipe down at the top -> Close
+        navigate(-1);
+      }
+    }
   };
 
   if (!product) return <div className="p-6 text-gray-400">Product not found</div>;
@@ -952,7 +1004,10 @@ function ProductPage() {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
-      <div className="flex-1 overflow-y-auto hide-scrollbar">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto hide-scrollbar"
+      >
         <div className="px-4 py-4 flex flex-col gap-4">
           <div className="w-full aspect-square rounded-2xl overflow-hidden bg-[#222] relative">
             <button onClick={() => navigate(-1)} className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center transition-transform active:scale-90">
