@@ -922,17 +922,40 @@ function ProductPage() {
   const inCart = useMemo(() => product ? cart.find(it => it.type === 'product' && it.productId === product.id) : null, [cart, product]);
   const recommendations = useMemo(() => product ? (catalog.products || []).filter(p => p.id !== product.id && (p.category === product.category || p.popular)).slice(0, 3) : [], [catalog.products, product]);
 
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchEnd - touchStart;
+    const isRightSwipe = distance > minSwipeDistance;
+    if (isRightSwipe) navigate(-1);
+  };
+
   if (!product) return <div className="p-6 text-gray-400">Product not found</div>;
 
   const name = (product.i18n?.[lang]?.name) || (product.i18n?.en?.name) || product.id;
   const price = Number(product.price || 0);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div
+      className="flex flex-col h-full overflow-hidden"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         <div className="px-4 py-4 flex flex-col gap-4">
           <div className="w-full aspect-square rounded-2xl overflow-hidden bg-[#222] relative">
-            <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center transition-transform active:scale-90">
+            <button onClick={() => navigate(-1)} className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center transition-transform active:scale-90">
               <span className="material-symbols-outlined text-white text-xl">close</span>
             </button>
             <div className="w-full h-full bg-center bg-cover" style={{ backgroundImage: `url('${getProductImg(product, 600)}')` }} />
@@ -1038,6 +1061,8 @@ function About() {
 
 function AppShell({ children }) {
   const { t, query, setQuery, activeSidebar, setActiveSidebar, catalog, getNameOfCategory, mainRef } = useApp();
+  const location = useLocation();
+  const isProductPage = location.pathname.startsWith('/product/');
 
   useEffect(() => {
     // Prevent iOS rubber-banding and scroll leaking
@@ -1103,8 +1128,8 @@ function AppShell({ children }) {
           {children}
         </main>
 
-        <aside className="w-[72px] bg-[#181818] overflow-y-auto hide-scrollbar flex flex-col py-2 gap-1 border-l border-[#222] flex-none">
-          {sidebarItems.map((item) => (
+        <aside className={`bg-[#181818] overflow-y-auto hide-scrollbar flex flex-col py-2 gap-1 border-l border-[#222] flex-none transition-all duration-300 ${isProductPage ? 'w-0 translate-x-full border-none' : 'w-[72px] translate-x-0'}`}>
+          {!isProductPage && sidebarItems.map((item) => (
             <button
               key={item.id}
               className={`w-full py-3 flex flex-col items-center gap-1 group transition-colors relative ${
@@ -1127,7 +1152,7 @@ function AppShell({ children }) {
         </aside>
       </div>
 
-      <BottomNav />
+      {!isProductPage && <BottomNav />}
     </div>
   );
 }
