@@ -171,6 +171,7 @@ function AppProvider({ children }) {
     priceOfProduct, getNameOfProduct, getNameOfCategory,
     cart, totals, currency,
     query, setQuery, activeSidebar, setActiveSidebar, mainRef,
+    homeScrollPos: React.useRef(0),
   };
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
@@ -200,56 +201,60 @@ function ProductCard({ product }) {
   const inCart = cart.find(it => it.type === 'product' && it.productId === product.id);
 
   return (
-    <div className="bg-brand-surface rounded-2xl p-3 shadow-soft flex flex-col gap-3 hover:-translate-y-0.5 hover:shadow-glow transition-transform duration-150">
-      <Link to={`/product/${product.id}`} className="block">
-        <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#222]">
+    <div className="bg-brand-surface rounded-2xl p-3 shadow-soft flex gap-4 hover:-translate-y-0.5 hover:shadow-glow transition-transform duration-150 border border-white/5">
+      <Link to={`/product/${product.id}`} className="shrink-0">
+        <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-[#222] shadow-inner">
           <div
             className="w-full h-full bg-center bg-cover"
-            style={{ backgroundImage: `url('${getProductImg(product)}')` }}
+            style={{ backgroundImage: `url('${getProductImg(product, 256)}')` }}
           />
         </div>
       </Link>
-      <div className="flex justify-between items-end gap-2">
-        <div className="flex-1 min-w-0">
+      <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+        <div>
           <Link to={`/product/${product.id}`} className="block">
-            <h4 className="text-xs font-bold leading-tight mb-0.5 line-clamp-2 min-h-[2em]">{name}</h4>
+            <h4 className="text-sm font-bold leading-tight mb-1 text-white truncate">{name}</h4>
             {product.weight && (
-              <p className="text-[10px] text-gray-400">{product.weight}</p>
+              <p className="text-[10px] text-gray-400 font-bold mb-1">{product.weight}</p>
             )}
             {product.description && (
-              <p className="text-[9px] text-gray-500 line-clamp-2">{product.description}</p>
+              <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">{product.description}</p>
             )}
-            <span className="block text-sm font-black text-brand-yellow mt-1">{formatPrice(price)}</span>
           </Link>
         </div>
-        {inCart ? (
-          <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5 border border-white/10 shrink-0">
+
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-base font-black text-brand-yellow">{formatPrice(price)}</span>
+
+          {inCart ? (
+            <div className="flex items-center gap-1.5 bg-black/20 rounded-lg p-0.5 border border-white/5 shrink-0">
+              <button
+                onClick={() => inCart.qty > 1 ? changeQty(inCart.id, -1) : removeItem(inCart.id)}
+                className="w-7 h-7 bg-brand-surface rounded flex items-center justify-center text-white active:scale-90 transition-all"
+              >
+                <span className="material-symbols-outlined text-xs font-black">remove</span>
+              </button>
+              <span className="text-xs font-bold min-w-[1rem] text-center">{inCart.qty}</span>
+              <button
+                onClick={() => changeQty(inCart.id, 1)}
+                className="w-7 h-7 bg-brand-yellow rounded flex items-center justify-center text-black active:scale-90 transition-all"
+              >
+                <span className="material-symbols-outlined text-xs font-black">add</span>
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={() => inCart.qty > 1 ? changeQty(inCart.id, -1) : removeItem(inCart.id)}
-              className="w-6 h-6 bg-brand-surface rounded flex items-center justify-center text-white active:scale-90 transition-all"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                addProduct(product.id, 1);
+              }}
+              className="w-9 h-9 bg-brand-yellow rounded-xl flex items-center justify-center shadow-lg active:scale-90 transition-all hover:bg-white shrink-0"
             >
-              <span className="material-symbols-outlined text-sm font-black">remove</span>
+              <span className="material-symbols-outlined text-black font-black text-xl">add</span>
             </button>
-            <span className="text-xs font-bold min-w-[1rem] text-center">{inCart.qty}</span>
-            <button
-              onClick={() => changeQty(inCart.id, 1)}
-              className="w-6 h-6 bg-brand-yellow rounded flex items-center justify-center text-black active:scale-90 transition-all"
-            >
-              <span className="material-symbols-outlined text-sm font-black">add</span>
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              addProduct(product.id, 1);
-            }}
-            className="w-8 h-8 bg-brand-yellow rounded-lg flex items-center justify-center shadow-lg active:scale-90 transition-all hover:bg-white shrink-0"
-          >
-            <span className="material-symbols-outlined text-black font-black text-lg">add</span>
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -306,14 +311,26 @@ function CategoryBar({ categories, current, onSelect }) {
 }
 
 function Home() {
-  const { catalog, lang, t, getNameOfCategory, query, activeSidebar } = useApp();
+  const { catalog, lang, t, getNameOfCategory, query, activeSidebar, homeScrollPos } = useApp();
   const scrollRef = React.useRef(null);
+  const lastSidebar = React.useRef(activeSidebar);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: 0, behavior: 'auto' });
+      if (lastSidebar.current === activeSidebar) {
+        scrollRef.current.scrollTo({ top: homeScrollPos.current, behavior: 'auto' });
+      } else {
+        scrollRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        homeScrollPos.current = 0;
+        lastSidebar.current = activeSidebar;
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSidebar]);
+
+  const handleScroll = (e) => {
+    homeScrollPos.current = e.target.scrollTop;
+  };
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -334,7 +351,11 @@ function Home() {
   const promoSets = useMemo(() => (catalog.sets || []).slice(0, 3), [catalog.sets]);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto hide-scrollbar p-4 flex flex-col gap-6">
+    <div
+      ref={scrollRef}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto hide-scrollbar p-4 flex flex-col gap-6"
+    >
       {(activeSidebar === 'all' || activeSidebar === 'top') && (
         <section className="w-full">
           <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar snap-x snap-mandatory">
@@ -369,7 +390,7 @@ function Home() {
             {activeSidebar === 'all' ? t.home : activeSidebar === 'top' ? t.popular : getNameOfCategory(activeSidebar)}
           </h3>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-4">
           {filteredProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
