@@ -212,12 +212,12 @@ function ProductCard({ product }) {
       <div className="flex justify-between items-end gap-2">
         <div className="flex-1 min-w-0">
           <Link to={`/product/${product.id}`} className="block">
-            <h4 className="text-xs font-bold leading-tight mb-0.5 truncate">{name}</h4>
+            <h4 className="text-xs font-bold leading-tight mb-0.5 line-clamp-2 min-h-[2em]">{name}</h4>
             {product.weight && (
-              <p className="text-[10px] text-gray-400 truncate">{product.weight}</p>
+              <p className="text-[10px] text-gray-400">{product.weight}</p>
             )}
             {product.description && (
-              <p className="text-[9px] text-gray-500 line-clamp-1">{product.description}</p>
+              <p className="text-[9px] text-gray-500 line-clamp-2">{product.description}</p>
             )}
             <span className="block text-sm font-black text-brand-yellow mt-1">{formatPrice(price)}</span>
           </Link>
@@ -345,7 +345,7 @@ function Home() {
                   <span className="bg-brand-orange text-white text-[9px] font-black uppercase px-2 py-0.5 rounded mb-1">
                     {t.sets}
                   </span>
-                  <h2 className="text-xl font-black text-white leading-none uppercase italic mb-1 truncate w-full">
+                  <h2 className="text-xl font-black text-white leading-tight uppercase italic mb-1 line-clamp-2 w-full">
                     {s.i18n?.[lang] || s.i18n?.en || s.id}
                   </h2>
                   <p className="text-[10px] text-gray-300 font-medium">{s.default_persons} {t.personsShort}</p>
