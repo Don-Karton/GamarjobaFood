@@ -307,6 +307,13 @@ function CategoryBar({ categories, current, onSelect }) {
 
 function Home() {
   const { catalog, lang, t, getNameOfCategory, query, activeSidebar } = useApp();
+  const scrollRef = React.useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [activeSidebar]);
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -327,7 +334,7 @@ function Home() {
   const promoSets = useMemo(() => (catalog.sets || []).slice(0, 3), [catalog.sets]);
 
   return (
-    <div className="flex-1 overflow-y-auto hide-scrollbar p-4 flex flex-col gap-6">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto hide-scrollbar p-4 flex flex-col gap-6">
       {(activeSidebar === 'all' || activeSidebar === 'top') && (
         <section className="w-full">
           <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar snap-x snap-mandatory">
