@@ -185,7 +185,7 @@ function LanguageSwitcher() {
       {['en','ru','ka'].map(code => (
         <button key={code}
           onClick={() => setLang(code)}
-          className={`px-3.5 py-2 rounded-lg text-[11px] font-bold leading-none transition-all active:scale-95 ${lang===code? 'bg-brand-yellow text-brand-dark border-2 border-brand-yellow/30' : 'text-gray-400 hover:text-white'}`}>
+          className={`px-2 py-2 rounded-lg text-[11px] font-bold leading-none transition-all active:scale-95 ${lang===code? 'bg-brand-yellow text-brand-dark border-2 border-brand-yellow/30' : 'text-gray-400 hover:text-white'}`}>
           {code.toUpperCase()}
         </button>
       ))}
@@ -1041,7 +1041,7 @@ function AppShell({ children }) {
 
   return (
     <div className="mx-auto max-w-md w-full relative h-[100dvh] flex flex-col bg-[#121212] overflow-hidden shadow-2xl">
-      <header className="flex-none bg-[#121212]/95 backdrop-blur-sm z-30 px-4 pt-6 pb-4 flex flex-col items-center gap-4 border-b border-[#222]">
+      <header className="flex-none bg-[#121212]/95 backdrop-blur-sm z-30 px-4 pt-3 pb-2 flex flex-col items-center gap-2 border-b border-[#222]">
         <div className="flex items-center justify-center gap-3">
           <div className="w-10 h-10 bg-brand-orange rounded-lg rotate-3 flex items-center justify-center text-white font-black text-xl shadow-[0_0_15px_rgba(255,165,0,0.3)]">
             GF
@@ -1049,30 +1049,36 @@ function AppShell({ children }) {
           <h1 className="text-xl font-black text-white italic tracking-tighter uppercase">GamarjobaFood</h1>
         </div>
         
-        <LanguageSwitcher />
+        <div className="flex items-center gap-3 w-full">
+          <LanguageSwitcher />
 
-        <div className="relative w-full h-10 bg-brand-surface rounded-xl flex items-center px-4 gap-3 border border-[#333] focus-within:border-brand-yellow transition-colors">
-          <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              if (window.location.hash !== '#/') navigate('/');
-            }}
-            className="bg-transparent border-none outline-none text-white placeholder-gray-500 text-sm flex-1 p-0 focus:ring-0"
-            placeholder={t.search}
-            type="text"
-          />
+          <div className="relative flex-1 h-10 bg-brand-surface rounded-xl flex items-center px-4 gap-3 border border-[#333] focus-within:border-brand-yellow transition-colors">
+            <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (window.location.hash !== '#/') navigate('/');
+              }}
+              className="bg-transparent border-none outline-none text-white placeholder-gray-500 text-sm flex-1 p-0 focus:ring-0"
+              placeholder={t.search}
+              type="text"
+            />
+          </div>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden relative">
-        <aside className="w-[72px] bg-[#181818] overflow-y-auto hide-scrollbar flex flex-col py-2 gap-1 border-r border-[#222] flex-none">
+        <main ref={mainRef} className="flex-1 flex flex-col min-h-0 bg-[#121212] relative overflow-hidden">
+          {children}
+        </main>
+
+        <aside className="w-[72px] bg-[#181818] overflow-y-auto hide-scrollbar flex flex-col py-2 gap-1 border-l border-[#222] flex-none">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               className={`w-full py-3 flex flex-col items-center gap-1 group transition-colors relative ${
-                activeSidebar === item.id ? 'bg-[#2C2C2C] border-r-[3px] border-brand-yellow' : 'hover:bg-[#222]'
+                activeSidebar === item.id ? 'bg-[#2C2C2C] border-l-[3px] border-brand-yellow' : 'hover:bg-[#222]'
               }`}
               onClick={() => {
                 setActiveSidebar(item.id);
@@ -1089,10 +1095,6 @@ function AppShell({ children }) {
             </button>
           ))}
         </aside>
-
-        <main ref={mainRef} className="flex-1 flex flex-col min-h-0 bg-[#121212] relative overflow-hidden">
-          {children}
-        </main>
       </div>
 
       <BottomNav />
