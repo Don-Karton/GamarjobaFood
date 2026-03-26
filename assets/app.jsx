@@ -375,25 +375,25 @@ function Home() {
 function BottomNav() {
   const { totals, t } = useApp();
   return (
-    <nav className="flex-none z-50 bg-[#1E1E1E] border-t border-[#333] pb-3 pt-2 px-8">
+    <nav className="flex-none z-50 bg-[#1E1E1E] border-t border-[#333] pb-2 pt-1.5 px-6">
       <div className="flex items-center justify-between">
-        <Link className="flex flex-col items-center justify-center w-14 gap-1 text-brand-yellow group -mt-4" to="/">
-          <span className="material-symbols-outlined text-[24px] filled group-hover:scale-110 transition-transform">home</span>
-          <span className="text-[9px] font-bold uppercase tracking-tight">{t.home}</span>
+        <Link className="flex flex-col items-center justify-center w-14 gap-1 text-brand-yellow group -mt-2" to="/">
+          <span className="material-symbols-outlined text-[22px] filled group-hover:scale-110 transition-transform">home</span>
+          <span className="text-[8px] font-bold uppercase tracking-tight">{t.home}</span>
         </Link>
-        <Link className="flex flex-col items-center justify-center w-14 gap-1 text-gray-400 hover:text-white transition-colors group -mt-4" to="/sets">
-          <span className="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform">view_list</span>
-          <span className="text-[9px] font-medium uppercase tracking-tight">{t.sets}</span>
+        <Link className="flex flex-col items-center justify-center w-14 gap-1 text-gray-400 hover:text-white transition-colors group -mt-2" to="/sets">
+          <span className="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">view_list</span>
+          <span className="text-[8px] font-medium uppercase tracking-tight">{t.sets}</span>
         </Link>
-        <div className="relative -top-9 mx-2">
-          <Link to="/cart" className="w-[84px] h-[84px] bg-brand-yellow rounded-full shadow-[0_4px_25px_rgba(255,199,44,0.5)] flex flex-col items-center justify-center border-4 border-[#1E1E1E] active:scale-95 transition-transform group relative z-10">
-            <span className="material-symbols-outlined text-black text-[36px] group-hover:scale-110 transition-transform mb-0.5">shopping_cart</span>
-            <span className="absolute -bottom-3 bg-[#121212] border border-[#333] text-white px-2 py-0.5 rounded-full text-[12px] font-black shadow-md whitespace-nowrap min-w-[76px] text-center">{formatPrice(totals.total)}</span>
+        <div className="relative -top-6 mx-1">
+          <Link to="/cart" className="w-[68px] h-[68px] bg-brand-yellow rounded-full shadow-[0_4px_20px_rgba(255,199,44,0.4)] flex flex-col items-center justify-center border-[3px] border-[#1E1E1E] active:scale-95 transition-transform group relative z-10">
+            <span className="material-symbols-outlined text-black text-[28px] group-hover:scale-110 transition-transform mb-0.5">shopping_cart</span>
+            <span className="absolute -bottom-2 bg-[#121212] border border-[#333] text-white px-1.5 py-0.5 rounded-full text-[10px] font-black shadow-md whitespace-nowrap min-w-[60px] text-center">{formatPrice(totals.total)}</span>
           </Link>
         </div>
-        <Link className="flex flex-col items-center justify-center w-14 gap-1 text-gray-400 hover:text-white transition-colors group -mt-4" to="/about">
-          <span className="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform">info</span>
-          <span className="text-[9px] font-medium uppercase tracking-tight">{t.about}</span>
+        <Link className="flex flex-col items-center justify-center w-14 gap-1 text-gray-400 hover:text-white transition-colors group -mt-2" to="/about">
+          <span className="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">info</span>
+          <span className="text-[8px] font-medium uppercase tracking-tight">{t.about}</span>
         </Link>
       </div>
     </nav>
@@ -1049,11 +1049,13 @@ function AppShell({ children }) {
           <h1 className="text-xl font-black text-white italic tracking-tighter uppercase">GamarjobaFood</h1>
         </div>
         
-        <div className="flex items-center gap-3 w-full">
-          <LanguageSwitcher />
+        <div className="flex items-center gap-2 w-full min-w-0">
+          <div className="shrink-0">
+            <LanguageSwitcher />
+          </div>
 
-          <div className="relative flex-1 h-10 bg-brand-surface rounded-xl flex items-center px-4 gap-3 border border-[#333] focus-within:border-brand-yellow transition-colors">
-            <span className="material-symbols-outlined text-gray-400 text-xl">search</span>
+          <div className="relative flex-1 h-10 bg-brand-surface rounded-xl flex items-center px-3 gap-2 border border-[#333] focus-within:border-brand-yellow transition-colors min-w-0">
+            <span className="material-symbols-outlined text-gray-400 text-xl shrink-0">search</span>
             <input
               value={query}
               onChange={(e) => {
