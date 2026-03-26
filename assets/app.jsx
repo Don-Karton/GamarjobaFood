@@ -213,7 +213,7 @@ function ProductCard({ product }) {
       <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
         <div>
           <Link to={`/product/${product.id}`} className="block">
-            <h4 className="text-sm font-bold leading-tight mb-1 text-white truncate">{name}</h4>
+            <h4 className="text-sm font-bold leading-tight mb-1 text-white line-clamp-2 min-h-[2.5rem] flex items-center">{name}</h4>
             {product.weight && (
               <p className="text-[10px] text-gray-400 font-bold mb-1">{product.weight}</p>
             )}
